@@ -168,7 +168,6 @@ if __name__ == "__main__":
     
     mercados_detetados = []
     if preco_pvb is not None:
-        # CORRIGIDO: Removido o erro de escrita 'session_pvb'
         mercados_detetados.append({'nome': 'PVB', 'regiao': 'Espanha', 'preco': preco_pvb, 'sessao': sessao_pvb, 'entrega': entrega_pvb})
     if preco_vtp is not None:
         mercados_detetados.append({'nome': 'VTP', 'regiao': 'Portugal', 'preco': preco_vtp, 'sessao': sessao_vtp, 'entrega': entrega_vtp})
@@ -191,9 +190,9 @@ if __name__ == "__main__":
                     houve_alteracao = True
         
         if houve_alteracao:
-            # Primeiro salvamos o ficheiro localmente na máquina virtual
+            # Primeiro salvamos o histórico localmente na máquina virtual do GitHub
             salvar_historico(mercados_detetados)
-            # Depois disparas o email
+            # Depois disparamos o email corporativo
             enviar_relatorio_email(mercados_detetados)
         else:
             print(f"{obter_timestamp()} 💤 Preços já enviados anteriormente hoje. Nenhuma ação necessária.")
