@@ -8,7 +8,7 @@ on:
   workflow_dispatch: # Mantém o botão ativo para testares à mão!
 
 permissions:
-  contents: write  # Dá permissão explícita de escrita ao token nativo
+  contents: write  # Dá permissão obrigatória de escrita ao token
 
 jobs:
   run-pipeline:
@@ -16,9 +16,6 @@ jobs:
     steps:
     - name: Clonar o Código para o Servidor
       uses: actions/checkout@v4
-      with:
-        # Mantém as credenciais ativas para os passos seguintes usarem automaticamente
-        persist-credentials: true
 
     - name: Configurar o Python no Servidor
       uses: actions/setup-python@v5
@@ -34,23 +31,9 @@ jobs:
         TUA_SENHA_APP: ${{ secrets.TUA_SENHA_APP }}
       run: python alfaprojeto.py
 
+    # PASSO CORRIGIDO: Substitui os comandos manuais do Git por esta ferramenta oficial anti-bloqueio
     - name: Guardar Histórico Atualizado na Nuvem
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        
-        # Faz o pull preventivo de forma segura usando a credencial persistida
-        git pull origin main --rebase
-
-        # Verifica se o ficheiro existe e se houve alterações reais
-        if [ -f historico_precos.json ]; then
-          git add historico_precos.json
-          if ! git diff --cached --quiet; then
-            git commit -m "💾 Estado de preços atualizado [Bot]"
-            git push origin main
-          else
-            echo "Nenhuma alteração detetada no ficheiro historico_precos.json."
-          fi
-        else
-          echo "Ficheiro historico_precos.json não foi encontrado."
-        fi
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "💾 Estado de preços atualizado [Bot]"
+        file_pattern: 'historico_precos.json'
