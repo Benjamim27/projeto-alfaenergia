@@ -1,0 +1,42 @@
+name: Monitor MIBGAS Alfaenergia
+
+on:
+  schedule:
+    # Executa a cada 5 minutos entre as 17:30 e as 18:30 UTC
+    # (Equivale às 18:30 até às 19:30 em Portugal Continental)
+    - cron: '30-59 17 * * *'  # Corre de 5 em 5 min das 17:30 às 17:59 UTC
+    - cron: '0-30/5 18 * * *' # Corre de 5 em 5 min das 18:00 às 18:30 UTC
+  workflow_dispatch: # Mantém o botão para testares à mão!
+
+permissions:
+  contents: write
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clonar o Código para o Servidor
+      uses: actions/checkout@v4
+
+    - name: Configurar o Python no Servidor
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Instalar Dependências necessárias
+      run: pip install requests
+
+    - name: Executar o Script Automatizado
+      env:
+        TEU_EMAIL: ${{ secrets.TEU_EMAIL }}
+        TUA_SENHA_APP: ${{ secrets.TUA_SENHA_APP }}
+      run: python projeto.py
+
+    - name: Guardar Histórico Atualizado na Nuvem
+      run: |
+        git config --global user.name "Alfaenergia Bot"
+        git config --global user.email "bot@alfaenergia.pt"
+        if [ -f historico_precos.json ]; then
+          git add historico_precos.json
+          git commit -m "💾 Estado de preços atualizado [Bot]" && git push || echo "Nenhuma alteração nos preços."
+        fi
