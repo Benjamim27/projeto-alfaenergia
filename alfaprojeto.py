@@ -16,7 +16,6 @@ DESTINATARIOS = [
     "pbenjamim2007@gmail.com", 
     "crybenjamim2007@gmail.com",
     "nunofalcao@alfaenergia.pt"
-
 ]
 
 FICHEIRO_HISTORICO = "historico_precos.json"
@@ -41,7 +40,8 @@ def salvar_historico(dados_mercados):
     for merc in dados_mercados:
         historico[merc['nome']] = {
             'preco': merc['preco'],
-            'entrega': merc['entrega']
+            'entrega': merc['entrega'],
+            'sessao': merc['sessao']  # Adicionado para manter sincronismo completo
         }
     try:
         with open(FICHEIRO_HISTORICO, 'w', encoding='utf-8') as f:
@@ -55,7 +55,6 @@ def buscar_preco_por_mercado(mercado):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     
-    # MODIFICAÇÃO: Procuramos APENAS a data de hoje para forçar a espera pelo fecho atual
     data_hoje = datetime.date.today().strftime("%d/%m/%Y")
     url = f"https://www.mibgas.es/pt/ajax/table/daily-price/{mercado.lower()}/export?date={data_hoje}"
     
