@@ -2,11 +2,12 @@ name: Monitor MIBGAS Alfaenergia
 
 on:
   schedule:
-    # Das 17:00 às 17:55 UTC (Em Portugal: 18:00 às 18:55)
+    # NOTA: O GitHub usa UTC. Portugal muda entre UTC+0 (Inverno) e UTC+1 (Verão)
+    # Das 17:00 às 17:55 UTC (Em Portugal: 17:00~17:55 no Inverno / 18:00~18:55 no Verão)
     - cron: '*/5 17 * * *'
-    # Das 18:00 às 18:55 UTC (Em Portugal: 19:00 às 19:55)
+    # Das 18:00 às 18:55 UTC (Em Portugal: 18:00~18:55 no Inverno / 19:00~19:55 no Verão)
     - cron: '*/5 18 * * *'
-    # Às 19:00 UTC certas (Em Portugal: última execução às 20:00)
+    # Às 19:00 UTC certas (Em Portugal: 19:00 no Inverno / 20:00 no Verão)
     - cron: '0 19 * * *'
   workflow_dispatch: # Mantém o botão para testares à mão!
 
@@ -20,8 +21,8 @@ jobs:
     - name: Clonar o Código para o Servidor
       uses: actions/checkout@v4
       with:
-        # ISTO É O QUE FALTA: Dá permissão real para o robô alterar arquivos
         token: ${{ secrets.GITHUB_TOKEN }}
+        persist-credentials: true
 
     - name: Configurar o Python no Servidor
       uses: actions/setup-python@v5
@@ -45,7 +46,15 @@ jobs:
         # Garante que puxamos qualquer micro-alteração antes do push para não dar erro
         git pull origin main --rebase
 
+        # Verifica se o arquivo existe e se houve alterações reais antes de fazer o commit
         if [ -f historico_precos.json ]; then
           git add historico_precos.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "💾 Estado de preços atualizado [Bot]" && git push origin main)
+          if ! git diff --cached --quiet; then
+            git commit -m "💾 Estado de preços atualizado [Bot]"
+            git push origin main
+          else
+            echo "Nenhuma alteração detetada no ficheiro historico_precos.json."
+          fi
+        else
+          echo "Ficheiro historico_precos.json não foi encontrado."
         fi
