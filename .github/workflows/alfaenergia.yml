@@ -30,7 +30,7 @@ jobs:
       env:
         TEU_EMAIL: ${{ secrets.TEU_EMAIL }}
         TUA_SENHA_APP: ${{ secrets.TUA_SENHA_APP }}
-      run: python projeto.py
+      run: python alfaprojeto.py
 
     - name: Guardar Histórico Atualizado na Nuvem
       run: |
