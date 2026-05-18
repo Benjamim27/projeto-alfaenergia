@@ -15,7 +15,6 @@ TUA_SENHA_APP = os.environ.get("TUA_SENHA_APP")
 DESTINATARIOS = [
     "pbenjamim2007@gmail.com", 
     "crybenjamim2007@gmail.com"
-
 ]
 
 FICHEIRO_HISTORICO = "historico_precos.json"
@@ -53,26 +52,30 @@ def buscar_preco_por_mercado(mercado):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
-    for i in range(5):
-        data_alvo = (datetime.date.today() - datetime.timedelta(days=i)).strftime("%d/%m/%Y")
-        url = f"https://www.mibgas.es/pt/ajax/table/daily-price/{mercado.lower()}/export?date={data_alvo}"
-        try:
-            resposta = requests.get(url, headers=headers, timeout=10)
-            if resposta.status_code == 200:
-                linhas = resposta.text.splitlines()
-                leitor = csv.reader(linhas)
-                for colunas in leitor:
-                    if len(colunas) >= 3 and "Diário" in colunas[0]:
-                        preco_raw = colunas[2].strip()
-                        if preco_raw == "-" or not preco_raw:
-                            continue
-                        preco_limpo = float(preco_raw.replace('.', '').replace(',', '.'))
-                        data_sessao = datetime.datetime.strptime(data_alvo, "%d/%m/%Y").date()
-                        data_entrega = data_sessao + datetime.timedelta(days=1)
-                        return (data_sessao.strftime("%d/%m/%Y"), data_entrega.strftime("%d/%m/%Y"), preco_limpo)
-        except Exception as e:
-            print(f"{obter_timestamp()} ⚠️ Erro no mercado {mercado.upper()}: {e}")
-            continue
+    
+    # MODIFICAÇÃO: Procuramos APENAS a data de hoje para forçar a espera pelo fecho atual
+    data_hoje = datetime.date.today().strftime("%d/%m/%Y")
+    url = f"https://www.mibgas.es/pt/ajax/table/daily-price/{mercado.lower()}/export?date={data_hoje}"
+    
+    try:
+        resposta = requests.get(url, headers=headers, timeout=10)
+        if resposta.status_code == 200:
+            linhas = resposta.text.splitlines()
+            leitor = csv.reader(linhas)
+            for colunas in leitor:
+                if len(colunas) >= 3 and "Diário" in colunas[0]:
+                    preco_raw = colunas[2].strip()
+                    if preco_raw == "-" or not preco_raw:
+                        continue
+                    
+                    preco_limpo = float(preco_raw.replace('.', '').replace(',', '.'))
+                    data_sessao = datetime.datetime.strptime(data_hoje, "%d/%m/%Y").date()
+                    data_entrega = data_sessao + datetime.timedelta(days=1)
+                    
+                    return (data_sessao.strftime("%d/%m/%Y"), data_entrega.strftime("%d/%m/%Y"), preco_limpo)
+    except Exception as e:
+        print(f"{obter_timestamp()} ⚠️ Erro no mercado {mercado.upper()}: {e}")
+        
     return None, None, None
 
 def enviar_relatorio_email(dados_mercados):
@@ -160,19 +163,24 @@ if __name__ == "__main__":
     print(f"{obter_timestamp()} 🚀 Execução inicializada.")
     sessao_pvb, entrega_pvb, preco_pvb = buscar_preco_por_mercado("pvb")
     sessao_vtp, entrega_vtp, preco_vtp = buscar_preco_por_mercado("vtp")
+    
     mercados_detetados = []
     if preco_pvb is not None:
         mercados_detetados.append({'nome': 'PVB', 'regiao': 'Espanha', 'preco': preco_pvb, 'sessao': sessao_pvb, 'entrega': entrega_pvb})
     if preco_vtp is not None:
         mercados_detetados.append({'nome': 'VTP', 'regiao': 'Portugal', 'preco': preco_vtp, 'sessao': sessao_vtp, 'entrega': entrega_vtp})
         
-    if mercados_detetados:
+    # MODIFICAÇÃO CRUCIAL: Só avançamos se AMBOS os mercados tiverem os dados de hoje publicados.
+    # Se um deles falhar, o script fecha silenciosamente e tenta novamente na próxima janela de 5 minutos.
+    if len(mercados_detetados) == 2:
         historico_anterior = carregar_historico()
         houve_alteracao = False
+        
         for merc in mercados_detetados:
             nome = merc['nome']
             preco_atual = merc['preco']
             entrega_atual = merc['entrega']
+            
             if nome not in historico_anterior:
                 houve_alteracao = True
             else:
@@ -185,6 +193,6 @@ if __name__ == "__main__":
             if enviar_relatorio_email(mercados_detetados):
                 salvar_historico(mercados_detetados)
         else:
-            print(f"{obter_timestamp()} 💤 Preços idênticos. Nenhuma ação necessária.")
+            print(f"{obter_timestamp()} 💤 Preços já enviados anteriormente hoje. Nenhuma ação necessária.")
     else:
-        print(f"{obter_timestamp()} 🛑 Sem dados válidos.")
+        print(f"{obter_timestamp()} 🛑 Os preços de hoje ainda não foram publicados pelo MIBGAS. A aguardar próxima execução...")
