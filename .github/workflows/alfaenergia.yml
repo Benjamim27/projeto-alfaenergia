@@ -17,6 +17,9 @@ jobs:
     steps:
     - name: Clonar o Código para o Servidor
       uses: actions/checkout@v4
+      with:
+        # ISTO É O QUE FALTA: Dá permissão real para o robô alterar arquivos
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configurar o Python no Servidor
       uses: actions/setup-python@v5
@@ -34,9 +37,13 @@ jobs:
 
     - name: Guardar Histórico Atualizado na Nuvem
       run: |
-        git config --global user.name "Alfaenergia Bot"
-        git config --global user.email "bot@alfaenergia.pt"
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        # Garante que puxamos qualquer micro-alteração antes do push para não dar erro
+        git pull origin main --rebase
+
         if [ -f historico_precos.json ]; then
           git add historico_precos.json
-          git commit -m "💾 Estado de preços atualizado [Bot]" && git push || echo "Nenhuma alteração nos preços."
+          git diff --quiet && git diff --staged --quiet || (git commit -m "💾 Estado de preços atualizado [Bot]" && git push origin main)
         fi
