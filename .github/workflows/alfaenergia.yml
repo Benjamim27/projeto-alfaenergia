@@ -2,17 +2,13 @@ name: Monitor MIBGAS Alfaenergia
 
 on:
   schedule:
-    # NOTA: O GitHub usa UTC. Portugal muda entre UTC+0 (Inverno) e UTC+1 (Verão)
-    # Das 17:00 às 17:55 UTC (Em Portugal: 17:00~17:55 no Inverno / 18:00~18:55 no Verão)
-    - cron: '*/5 17 * * *'
-    # Das 18:00 às 18:55 UTC (Em Portugal: 18:00~18:55 no Inverno / 19:00~19:55 no Verão)
-    - cron: '*/5 18 * * *'
-    # Às 19:00 UTC certas (Em Portugal: 19:00 no Inverno / 20:00 no Verão)
+    # Corre de 15 em 15 minutos entre as 17:00 UTC e as 19:00 UTC (18h às 20h em Portugal)
+    - cron: '*/15 17,18 * * *'
     - cron: '0 19 * * *'
-  workflow_dispatch: # Mantém o botão para testares à mão!
+  workflow_dispatch: # Mantém o botão ativo para testares à mão!
 
 permissions:
-  contents: write
+  contents: write  # Dá permissão explícita de escrita ao token
 
 jobs:
   run-pipeline:
@@ -21,8 +17,8 @@ jobs:
     - name: Clonar o Código para o Servidor
       uses: actions/checkout@v4
       with:
+        # Força o checkout a usar o token com permissões completas
         token: ${{ secrets.GITHUB_TOKEN }}
-        persist-credentials: true
 
     - name: Configurar o Python no Servidor
       uses: actions/setup-python@v5
@@ -39,10 +35,16 @@ jobs:
       run: python alfaprojeto.py
 
     - name: Guardar Histórico Atualizado na Nuvem
+      env:
+        # Passamos o token como variável de ambiente para o Git conseguir fazer o push
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
+        # Configura a URL remota para incluir o token de autenticação de forma explícita
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
         # Garante que puxamos qualquer micro-alteração antes do push para não dar erro
         git pull origin main --rebase
 
