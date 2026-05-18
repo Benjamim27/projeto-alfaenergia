@@ -2,10 +2,12 @@ name: Monitor MIBGAS Alfaenergia
 
 on:
   schedule:
-    # Executa a cada 5 minutos entre as 17:30 e as 18:30 UTC
-    # (Equivale às 18:30 até às 19:30 em Portugal Continental)
-    - cron: '30-59 17 * * *'  # Corre de 5 em 5 min das 17:30 às 17:59 UTC
-    - cron: '0-30/5 18 * * *' # Corre de 5 em 5 min das 18:00 às 18:30 UTC
+    # Das 17:00 às 17:55 UTC (Em Portugal: 18:00 às 18:55)
+    - cron: '*/5 17 * * *'
+    # Das 18:00 às 18:55 UTC (Em Portugal: 19:00 às 19:55)
+    - cron: '*/5 18 * * *'
+    # Às 19:00 UTC certas (Em Portugal: última execução às 20:00)
+    - cron: '0 19 * * *'
   workflow_dispatch: # Mantém o botão para testares à mão!
 
 permissions:
