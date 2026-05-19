@@ -2,11 +2,10 @@ name: Monitor MIBGAS Alfaenergia
 
 on:
   schedule:
-    # Corre de 15 em 15 minutos entre as 17:00 UTC e as 18:45 UTC
-    - cron: '*/15 17,18 * * *'
-    # Corre exatamente às 19:00 UTC (20:00 em Portugal) para o último fecho
-    - cron: '0 19 * * *'
-  workflow_dispatch: # Mantém o botão ativo para testares à mão!
+    # MODO SPAM AGORA (10h Portugal / 09h UTC): 
+    # Vai tentar disparar de 5 em 5 minutos durante a hora atual (9h UTC)
+    - cron: '*/5 9 * * *'
+  workflow_dispatch: # Mantém o botão ativo para emergências
 
 permissions:
   contents: write  # Dá permissão obrigatória de escrita ao token
