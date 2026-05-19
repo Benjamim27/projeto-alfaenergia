@@ -15,7 +15,8 @@ TUA_SENHA_APP = os.environ.get("TUA_SENHA_APP")
 DESTINATARIOS = [
     "pbenjamim2007@gmail.com", 
     "crybenjamim2007@gmail.com",
-    "nunofalcao@alfaenergia.pt"
+    "nunofalcao@alfaenergia.pt",
+    "idalinapaiva550@zarco.pt"
 ]
 
 FICHEIRO_HISTORICO = "historico_precos.json"
