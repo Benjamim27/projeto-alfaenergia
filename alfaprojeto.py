@@ -13,10 +13,7 @@ from email.mime.multipart import MIMEMultipart
 TEU_EMAIL = os.environ.get("TEU_EMAIL")
 TUA_SENHA_APP = os.environ.get("TUA_SENHA_APP")
 DESTINATARIOS = [
-    "pbenjamim2007@gmail.com", 
-    "crybenjamim2007@gmail.com",
-    "nunofalcao@alfaenergia.pt",
-    "idalinapaiva550@zarco.pt"
+    "pbenjamim2007@gmail.com","nunofalcao@alfaenergia.pt"
 ]
 
 FICHEIRO_HISTORICO = "historico_precos.json"
